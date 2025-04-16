@@ -47,9 +47,12 @@ export function ConversationList({
         return;
       }
       
+      // Extract just the username part of the email for the conversation name
+      const emailUsername = searchEmail.split('@')[0] || 'user';
+      
       // Create a new conversation with this user
       const newConversation = await createConversation([user.id], {
-        name: user.full_name || 'Chat',
+        name: `Chat with ${emailUsername}`,
         isGroup: false,
       });
       
