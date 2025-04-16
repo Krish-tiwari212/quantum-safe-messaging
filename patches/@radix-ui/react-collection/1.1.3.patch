@@ -1,0 +1,22 @@
+diff --git a/node_modules/@radix-ui/react-collection/dist/index.mjs b/node_modules/@radix-ui/react-collection/dist/index.mjs
+index 5c7e762..bd4b89c 100644
+--- a/node_modules/@radix-ui/react-collection/dist/index.mjs
++++ b/node_modules/@radix-ui/react-collection/dist/index.mjs
+@@ -4,7 +4,7 @@
+ import * as React from "react";
+ import { createContextScope } from "@radix-ui/react-context";
+ import { useComposedRefs } from "@radix-ui/react-compose-refs";
+-import { createSlot } from "@radix-ui/react-slot";
++import { Slot } from "@radix-ui/react-slot";
+ import { jsx } from "react/jsx-runtime";
+ function createCollection(name) {
+   const PROVIDER_NAME = name + "CollectionProvider";
+@@ -51,7 +51,7 @@ function createCollection(name) {
+       const autoComplete = props.autoComplete || "";
+       return /* @__PURE__ */ jsx(
+         "div",
+-        { role: "presentation", "data-radix-collection-item": "", ...mentionItemProps, ref: composedRefs, children: /* @__PURE__ */ jsx(createSlot, { ...props, ref: forceUpdate }) }
++        { role: "presentation", "data-radix-collection-item": "", ...mentionItemProps, ref: composedRefs, children: /* @__PURE__ */ jsx(Slot, { ...props, ref: forceUpdate }) }
+       );
+     });
+     Item.displayName = ITEM_NAME;
