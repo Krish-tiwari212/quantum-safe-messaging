@@ -214,49 +214,71 @@ export async function addParticipantToConversation(conversationId: string, parti
     // Normalize email for case-insensitive comparison
     const normalizedEmail = participantEmail.trim().toLowerCase();
     console.log(`Looking for user with email: ${normalizedEmail}`);
-
-    let userToAdd: any = null;
+    
+    // Variable to store the found user ID
     let userId: string | null = null;
-
-    // First try with RPC function
+    
+    // Method 1: Try the RPC function first (if it exists)
     try {
-      const { data, error } = await supabase.rpc('find_user_by_email', { 
-        email_to_find: normalizedEmail 
-      });
+      const { data: foundUser, error: userError } = await supabase
+        .rpc('find_user_by_email', { email_to_find: normalizedEmail });
       
-      if (!error && data && data.id) {
-        userToAdd = data;
-        userId = data.id;
-        console.log('User found by RPC function:', data);
+      if (!userError && foundUser && foundUser.id) {
+        userId = foundUser.id;
+        console.log('Found user via RPC function:', userId);
       }
     } catch (rpcError) {
-      console.error('Error finding user with RPC:', rpcError);
+      console.error('RPC function failed or does not exist:', rpcError);
+      // Continue to fallback methods
     }
     
-    // If RPC failed, try direct auth query (with proper permissions)
+    // Method 2: Try using get_user_email_by_id RPC in reverse (if it exists)
     if (!userId) {
       try {
-        const { data: authUsers } = await supabase.auth.admin.listUsers({
-          filter: {
-            email: normalizedEmail
-          }
-        });
+        console.log('Trying alternative lookup method...');
+        const { data: users } = await supabase
+          .from('users')
+          .select('id')
+          .limit(100);
         
-        if (authUsers?.users && authUsers.users.length > 0) {
-          userId = authUsers.users[0].id;
-          console.log('User found by auth admin:', userId);
+        if (users && users.length > 0) {
+          for (const potentialUser of users) {
+            const { data: email } = await supabase
+              .rpc('get_user_email_by_id', { user_id: potentialUser.id });
+              
+            if (email && email.toLowerCase() === normalizedEmail) {
+              userId = potentialUser.id;
+              console.log('Found user by iterating through users:', userId);
+              break;
+            }
+          }
         }
-      } catch (authError) {
-        console.error('Error finding user with auth admin:', authError);
+      } catch (lookupError) {
+        console.error('Alternative lookup failed:', lookupError);
       }
     }
     
-    // Special case for known Google user
-    if (!userId && normalizedEmail === 'champcrazy212@gmail.com') {
-      userId = '5d860dc2-2000-43bd-b43a-e28726eed9f9'; // The ID you provided
-      console.log('Using hardcoded ID for champcrazy212@gmail.com:', userId);
+    // Method 3: Try direct access to auth.users via service role (for development only)
+    if (!userId) {
+      try {
+        console.log('Attempting to use direct user lookup...');
+        // This is for development only and should be properly secured
+        const { data: userData } = await supabase
+          .from('users')
+          .select('id, email')
+          .eq('email', normalizedEmail)
+          .single();
+          
+        if (userData && userData.id) {
+          userId = userData.id;
+          console.log('Found user via direct email lookup:', userId);
+        }
+      } catch (directError) {
+        console.error('Direct lookup failed:', directError);
+      }
     }
     
+    // If we still don't have a user ID, report failure
     if (!userId) {
       throw new Error(`No user found with email: ${participantEmail}`);
     }
