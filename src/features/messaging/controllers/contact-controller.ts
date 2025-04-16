@@ -39,60 +39,137 @@ export async function findUserByEmail(email: string): Promise<UserProfileWithKey
     
     console.log(`Searching for user with email: ${normalizedEmail}`);
     
-    // Try to find the user with the RPC function
+    let userId: string | null = null;
+    let userData: {
+      id: string;
+      full_name?: string;
+      avatar_url?: string;
+    } | null = null;
+    
+    // Method 1: Try the RPC function if it exists
     try {
-      const { data: rpcData } = await supabase.rpc('find_user_by_email', { 
+      const { data: rpcData, error } = await supabase.rpc('find_user_by_email', { 
         email_to_find: normalizedEmail 
       });
       
-      if (rpcData && rpcData.id) {
-        // Get the user's public key for secure communication
-        const { data: participant } = await supabase
-          .from('conversation_participants')
-          .select('public_key')
-          .eq('user_id', rpcData.id)
-          .maybeSingle();
-        
-        return {
+      if (!error && rpcData && rpcData.id) {
+        userId = rpcData.id;
+        userData = {
           id: rpcData.id,
-          full_name: rpcData.full_name || 'User',
-          avatar_url: rpcData.avatar_url || null,
-          public_key: participant?.public_key || null
+          full_name: rpcData.full_name,
+          avatar_url: rpcData.avatar_url
         };
+        console.log('Found user via RPC function:', userId);
       }
     } catch (rpcError) {
       console.error('RPC search failed:', rpcError);
     }
     
-    // If RPC fails, try a simpler approach using the profiles table directly
-    try {
-      // First get the user ID from auth.users if permissions allow
-      const { data: userEmail } = await supabase
-        .rpc('get_user_id_by_email', { email_to_check: normalizedEmail });
-        
-      if (userEmail) {
-        // Now get the user profile
-        const { data: userProfile } = await supabase
-          .from('users')
-          .select('id, full_name, avatar_url')
-          .eq('id', userEmail)
-          .single();
+    // Method 2: Try using get_user_id_by_email RPC function
+    if (!userId) {
+      try {
+        const { data: emailLookup } = await supabase
+          .rpc('get_user_id_by_email', { email_to_check: normalizedEmail });
           
-        if (userProfile) {
-          return {
-            id: userProfile.id,
-            full_name: userProfile.full_name || 'User',
-            avatar_url: userProfile.avatar_url || null,
-            public_key: null
-          };
+        if (emailLookup) {
+          userId = emailLookup;
+          console.log('Found user ID by email lookup:', userId);
+          
+          // Now fetch user data
+          const { data: profile } = await supabase
+            .from('users')
+            .select('full_name, avatar_url')
+            .eq('id', userId)
+            .single();
+            
+          if (profile) {
+            userData = {
+              id: userId,
+              full_name: profile.full_name,
+              avatar_url: profile.avatar_url
+            };
+          }
         }
+      } catch (lookupError) {
+        console.error('Email lookup failed:', lookupError);
       }
-    } catch (sqlError) {
-      console.error('Direct user lookup failed:', sqlError);
     }
     
-    console.log('No user found with email:', normalizedEmail);
-    return null;
+    // Method 3: Try direct lookup as a last resort
+    if (!userId) {
+      try {
+        // Try to find user by iterating through users and checking emails
+        // Only do this for a limited number to keep it performant
+        const { data: users } = await supabase
+          .from('users')
+          .select('id')
+          .limit(100);
+        
+        if (users && users.length > 0) {
+          for (const user of users) {
+            const { data: email } = await supabase
+              .rpc('get_user_email_by_id', { user_id: user.id });
+              
+            if (email && email.toLowerCase() === normalizedEmail) {
+              userId = user.id;
+              
+              // Get profile data
+              const { data: profile } = await supabase
+                .from('users')
+                .select('full_name, avatar_url')
+                .eq('id', userId)
+                .single();
+                
+              if (profile) {
+                userData = {
+                  id: userId,
+                  full_name: profile.full_name,
+                  avatar_url: profile.avatar_url
+                };
+              } else {
+                userData = { id: userId };
+              }
+              
+              console.log('Found user by checking individual emails:', userId);
+              break;
+            }
+          }
+        }
+      } catch (directError) {
+        console.error('Direct lookup failed:', directError);
+      }
+    }
+    
+    if (!userId || !userData) {
+      console.log('No user found with email:', normalizedEmail);
+      return null;
+    }
+    
+    // Get the user's public key if available
+    try {
+      const { data: participant } = await supabase
+        .from('conversation_participants')
+        .select('public_key')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      return {
+        id: userId,
+        full_name: userData.full_name || 'User',
+        avatar_url: userData.avatar_url || null,
+        public_key: participant?.public_key || null
+      };
+    } catch (keyError) {
+      console.error('Error fetching user public key:', keyError);
+      
+      // Return basic user data even if we can't get the public key
+      return {
+        id: userId,
+        full_name: userData.full_name || 'User',
+        avatar_url: userData.avatar_url || null,
+        public_key: null
+      };
+    }
   } catch (error) {
     console.error('Error finding user by email:', error);
     return null;

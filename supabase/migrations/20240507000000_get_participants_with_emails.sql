@@ -7,7 +7,7 @@ RETURNS TABLE (
   full_name TEXT,
   avatar_url TEXT,
   public_key TEXT,
-  email TEXT
+  email VARCHAR(255)  -- Changed from TEXT to VARCHAR(255) to match auth.users.email type
 )
 LANGUAGE plpgsql
 SECURITY DEFINER -- Function runs with privileges of creator
