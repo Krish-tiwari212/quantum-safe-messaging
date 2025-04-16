@@ -130,8 +130,8 @@ export function MessageDashboard({
         </div>
       )}
       
-      {/* Message View */}
-      {shouldShowMessages && (
+      {/* Message View - Only render if we have a selected conversation */}
+      {shouldShowMessages && selectedConversation && (
         <div className={`${isMobileView ? 'w-full' : 'w-2/3'}`}>
           {isMobileView && (
             <div className="bg-zinc-800 p-2 flex items-center">
@@ -156,7 +156,7 @@ export function MessageDashboard({
       )}
       
       {/* Empty state when no conversation is selected */}
-      {!isMobileView && !selectedConversation && (
+      {(!isMobileView || !showConversationList) && !selectedConversation && (
         <div className="w-2/3 flex items-center justify-center h-full text-zinc-500">
           <p>Select a conversation or start a new one</p>
         </div>
