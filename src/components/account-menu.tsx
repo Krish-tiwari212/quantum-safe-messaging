@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { IoPersonCircleOutline } from 'react-icons/io5';
-
 import {
   DropdownMenu,
   DropdownMenuArrow,
@@ -11,27 +10,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ActionResponse } from '@/types/action-response';
-
 import { useToast } from './ui/use-toast';
 
-export function AccountMenu({ signOut }: { signOut: () => Promise<ActionResponse> }) {
+// Update props type to accept a function without a return type
+export function AccountMenu({ signOut }: { signOut: () => void }) {
   const router = useRouter();
   const { toast } = useToast();
 
   async function handleLogoutClick() {
-    const response = await signOut();
-
-    if (response?.error) {
+    try {
+      await signOut();
+      router.refresh();
+      toast({
+        description: 'You have been logged out.',
+      });
+    } catch (error) {
+      console.error('Error logging out:', error);
       toast({
         variant: 'destructive',
         description: 'An error occurred while logging out. Please try again or contact support.',
-      });
-    } else {
-      router.refresh();
-
-      toast({
-        description: 'You have been logged out.',
       });
     }
   }
@@ -44,6 +41,9 @@ export function AccountMenu({ signOut }: { signOut: () => Promise<ActionResponse
       <DropdownMenuContent className='me-4'>
         <DropdownMenuItem asChild>
           <Link href='/account'>Account</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href='/messages'>Messages</Link>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleLogoutClick}>Log Out</DropdownMenuItem>
         <DropdownMenuArrow className='me-4 fill-white' />

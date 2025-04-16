@@ -326,19 +326,19 @@ export function MessageView({
       />
       
       {/* Conversation Header */}
-      <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
-        <div>
-          <h2 className="font-bold">
+      <div className="p-3 md:p-4 border-b border-zinc-800 flex justify-between items-center">
+        <div className="overflow-hidden">
+          <h2 className="font-bold text-sm md:text-base truncate">
             {conversation.metadata?.name || 'Chat'}
           </h2>
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-zinc-400 truncate">
             {participants.length} participants • Quantum-Safe Encrypted
           </p>
         </div>
         <Button
           variant="ghost"
           size="icon"
-          className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+          className="text-zinc-400 hover:text-white hover:bg-zinc-800 flex-shrink-0"
           onClick={() => setIsAddParticipantOpen(true)}
           title="Add Participant"
         >
@@ -347,7 +347,7 @@ export function MessageView({
       </div>
       
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-3 md:space-y-4">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-zinc-500">Loading messages...</p>
@@ -361,25 +361,25 @@ export function MessageView({
               }`}
             >
               <div
-                className={`max-w-[70%] rounded-lg p-3 ${
+                className={`max-w-[85%] md:max-w-[70%] rounded-lg p-2 md:p-3 ${
                   message.sender_id === currentUser.id
                     ? 'bg-cyan-800 text-white'
                     : 'bg-zinc-800 text-white'
                 }`}
               >
-                <div className="flex justify-between items-baseline mb-1">
-                  <span className="font-medium text-sm">
+                <div className="flex justify-between items-baseline mb-1 flex-wrap">
+                  <span className="font-medium text-xs md:text-sm">
                     {getDisplayName(message.sender_id)}
                   </span>
-                  <span className="text-xs opacity-70 ml-2">
+                  <span className="text-[10px] md:text-xs opacity-70 ml-1 md:ml-2">
                     {formatTime(message.created_at)}
                   </span>
                 </div>
-                <p className="text-sm">
+                <p className="text-xs md:text-sm break-words">
                   {/* Use pre-decrypted content from state */}
                   {getDecryptedContent(message.id)}
                 </p>
-                <p className="text-xs opacity-70 mt-1">
+                <p className="text-[10px] md:text-xs opacity-70 mt-1">
                   Quantum-Safe Encrypted
                 </p>
               </div>
@@ -387,26 +387,26 @@ export function MessageView({
           ))
         ) : (
           <div className="flex items-center justify-center h-full">
-            <p className="text-zinc-500">No messages yet. Start the conversation!</p>
+            <p className="text-zinc-500 text-sm">No messages yet. Start the conversation!</p>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
       
       {/* Message Input */}
-      <div className="p-4 border-t border-zinc-800">
+      <div className="p-2 md:p-4 border-t border-zinc-800">
         <form onSubmit={handleSendMessage} className="flex gap-2">
           <Input
             placeholder="Type a message..."
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
             disabled={isSending}
-            className="bg-zinc-800 border-zinc-700"
+            className="bg-zinc-800 border-zinc-700 text-sm md:text-base"
           />
           <Button 
             type="submit" 
             disabled={!messageInput.trim() || isSending}
-            className="bg-cyan-600 hover:bg-cyan-500 min-w-[80px]"
+            className="bg-cyan-600 hover:bg-cyan-500 min-w-[60px] md:min-w-[80px] text-xs md:text-sm"
           >
             {isSending ? 'Sending...' : 'Send'}
           </Button>

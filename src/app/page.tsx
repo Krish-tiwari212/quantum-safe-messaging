@@ -1,7 +1,8 @@
 import Link from 'next/link';
-
 import { Container } from '@/components/container';
 import { Button } from '@/components/ui/button';
+import { getSession } from '@/features/account/controllers/get-session';
+import { MessageSquare } from 'lucide-react';
 
 export default async function HomePage() {
   return (
@@ -12,7 +13,9 @@ export default async function HomePage() {
   );
 }
 
-function HeroSection() {
+async function HeroSection() {
+  const session = await getSession();
+  
   return (
     <section className='relative overflow-hidden lg:overflow-visible'>
       <Container className='relative rounded-lg bg-black py-20 lg:py-[140px]'>
@@ -27,9 +30,26 @@ function HeroSection() {
             Our platform uses post-quantum cryptographic algorithms to ensure your messages remain secure
             even against quantum computer attacks.
           </p>
-          <Button asChild variant='sexy'>
-            <Link href='/signup'>Get started for free</Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4">
+            {session ? (
+              <Button asChild variant='sexy' className='flex items-center gap-2'>
+                <Link href='/messages'>
+                  <MessageSquare size={18} />
+                  Go to Messages
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild variant='sexy'>
+                <Link href='/signup'>Get started for free</Link>
+              </Button>
+            )}
+            
+            {session && (
+              <Button asChild variant='outline'>
+                <Link href='/account'>Your Account</Link>
+              </Button>
+            )}
+          </div>
         </div>
       </Container>
     </section>

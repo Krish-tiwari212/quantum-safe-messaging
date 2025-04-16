@@ -111,8 +111,8 @@ export function ConversationList({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
-        <h2 className="text-lg font-bold">Conversations</h2>
+      <div className="p-3 md:p-4 border-b border-zinc-800 flex justify-between items-center">
+        <h2 className="text-base md:text-lg font-bold">Conversations</h2>
         <Button 
           variant="outline" 
           size="sm"
@@ -125,20 +125,20 @@ export function ConversationList({
       
       {/* New Conversation Form */}
       {isCreating && (
-        <div className="p-4 border-b border-zinc-800">
-          <h3 className="text-sm font-semibold mb-2">Start a new conversation</h3>
-          <div className="flex gap-2">
+        <div className="p-3 md:p-4 border-b border-zinc-800">
+          <h3 className="text-xs md:text-sm font-semibold mb-2">Start a new conversation</h3>
+          <div className="flex flex-col md:flex-row gap-2">
             <Input
               placeholder="Enter email address"
               value={searchEmail}
               onChange={(e) => setSearchEmail(e.target.value)}
-              className="text-sm bg-zinc-800 border-zinc-700"
+              className="text-xs md:text-sm bg-zinc-800 border-zinc-700"
             />
             <Button 
               size="sm" 
               onClick={handleCreateConversation} 
               disabled={!searchEmail || isLoading}
-              className="bg-cyan-600 hover:bg-cyan-500"
+              className="bg-cyan-600 hover:bg-cyan-500 text-xs md:text-sm"
             >
               Start
             </Button>
@@ -161,30 +161,30 @@ export function ConversationList({
             {conversations.map((conversation) => (
               <div
                 key={conversation.id}
-                className={`p-4 cursor-pointer hover:bg-zinc-800 transition-colors ${
+                className={`p-2 md:p-4 cursor-pointer hover:bg-zinc-800 transition-colors ${
                   selectedConversationId === conversation.id ? 'bg-zinc-800' : ''
                 }`}
                 onClick={() => onSelectConversation(conversation)}
               >
                 <div className="flex justify-between items-start mb-1">
-                  <h3 className="font-medium truncate">
+                  <h3 className="font-medium text-xs md:text-sm truncate max-w-[70%]">
                     {getConversationTitle(conversation)}
                   </h3>
-                  <span className="text-xs text-zinc-400">
+                  <span className="text-[10px] md:text-xs text-zinc-400 flex-shrink-0">
                     {formatTime(conversation.updated_at)}
                   </span>
                 </div>
-                <p className="text-sm text-zinc-400 truncate">
+                <p className="text-xs md:text-sm text-zinc-400 truncate">
                   {getLastMessagePreview(conversation)}
                 </p>
               </div>
             ))}
           </div>
         ) : (
-          <div className="flex items-center justify-center h-full p-4 text-center text-zinc-500">
+          <div className="flex items-center justify-center h-full p-2 md:p-4 text-center text-zinc-500">
             <div>
-              <p className="mb-2">No conversations yet</p>
-              <p className="text-sm">Start a new conversation by clicking the button above</p>
+              <p className="mb-1 md:mb-2 text-xs md:text-sm">No conversations yet</p>
+              <p className="text-xs">Start a new conversation by clicking the button above</p>
             </div>
           </div>
         )}

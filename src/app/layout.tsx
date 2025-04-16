@@ -50,10 +50,14 @@ export default function RootLayout({ children }: PropsWithChildren) {
 }
 
 async function AppBar() {
+  // Get the session data
+  const { getSession } = await import('@/features/account/controllers/get-session');
+  const session = await getSession();
+  
   return (
     <header className='flex items-center justify-between py-8'>
       <Logo />
-      <Navigation />
+      <Navigation session={session} />
     </header>
   );
 }
